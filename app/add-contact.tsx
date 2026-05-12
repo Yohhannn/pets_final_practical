@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, Image, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
+import { collection, addDoc, getDocs } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -64,14 +64,21 @@ export default function AddContactScreen() {
 
     setSaving(true);
     try {
-      // Rule 1: Same first name + last name (case-insensitive)
-      const nameQuery = query(
-        collection(db, 'contacts'),
-        where('firstNameLower', '==', formData.firstName.trim().toLowerCase()),
-        where('lastNameLower', '==', formData.lastName.trim().toLowerCase())
-      );
-      const sameNameDocs = await getDocs(nameQuery);
-      if (!sameNameDocs.empty) {
+      // Fetch all contacts and do case-insensitive comparison client-side
+      const allDocs = await getDocs(collection(db, 'contacts'));
+      const allContacts = allDocs.docs;
+
+      // Rule 1: Same first+last name (case-insensitive)
+      const firstLower = formData.firstName.trim().toLowerCase();
+      const lastLower = formData.lastName.trim().toLowerCase();
+      const nameDuplicate = allContacts.find(d => {
+        const data = d.data();
+        return (
+          (data.firstNameLower || data.firstName?.toLowerCase()) === firstLower &&
+          (data.lastNameLower || data.lastName?.toLowerCase()) === lastLower
+        );
+      });
+      if (nameDuplicate) {
         Alert.alert(
           'Duplicate Contact',
           `A contact named "${formData.firstName} ${formData.lastName}" already exists.`
@@ -82,12 +89,11 @@ export default function AddContactScreen() {
 
       // Rule 2: Same phone number
       if (formData.phone.trim()) {
-        const phoneQuery = query(
-          collection(db, 'contacts'),
-          where('phone', '==', formData.phone.trim())
-        );
-        const samePhoneDocs = await getDocs(phoneQuery);
-        if (!samePhoneDocs.empty) {
+        const phoneDuplicate = allContacts.find(d => {
+          const data = d.data();
+          return data.phone?.trim() === formData.phone.trim();
+        });
+        if (phoneDuplicate) {
           Alert.alert(
             'Duplicate Phone Number',
             `The phone number "${formData.phone}" is already used by another contact.`
@@ -99,8 +105,8 @@ export default function AddContactScreen() {
 
       await addDoc(collection(db, 'contacts'), {
         ...formData,
-        firstNameLower: formData.firstName.trim().toLowerCase(),
-        lastNameLower: formData.lastName.trim().toLowerCase(),
+        firstNameLower: firstLower,
+        lastNameLower: lastLower,
         createdAt: new Date()
       });
       router.back();

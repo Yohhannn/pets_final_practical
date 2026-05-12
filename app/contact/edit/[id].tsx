@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, ActivityIndicator, Image, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, getDocs, query, collection, where } from 'firebase/firestore';
 import { db } from '../../../firebaseConfig';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -101,11 +101,50 @@ export default function EditContactScreen() {
 
     setSaving(true);
     try {
+      // Fetch all contacts and do case-insensitive comparison client-side
+      const allDocs = await getDocs(collection(db, 'contacts'));
+      const otherContacts = allDocs.docs.filter(d => d.id !== id);
+
+      // Rule 1: Same first+last name (case-insensitive), excluding self
+      const firstLower = formData.firstName.trim().toLowerCase();
+      const lastLower = formData.lastName.trim().toLowerCase();
+      const nameDuplicate = otherContacts.find(d => {
+        const data = d.data();
+        return (
+          (data.firstNameLower || data.firstName?.toLowerCase()) === firstLower &&
+          (data.lastNameLower || data.lastName?.toLowerCase()) === lastLower
+        );
+      });
+      if (nameDuplicate) {
+        Alert.alert(
+          'Duplicate Contact',
+          `A contact named "${formData.firstName} ${formData.lastName}" already exists.`
+        );
+        setSaving(false);
+        return;
+      }
+
+      // Rule 2: Same phone number, excluding self
+      if (formData.phone.trim()) {
+        const phoneDuplicate = otherContacts.find(d => {
+          const data = d.data();
+          return data.phone?.trim() === formData.phone.trim();
+        });
+        if (phoneDuplicate) {
+          Alert.alert(
+            'Duplicate Phone Number',
+            `The phone number "${formData.phone}" is already used by another contact.`
+          );
+          setSaving(false);
+          return;
+        }
+      }
+
       const docRef = doc(db, 'contacts', id as string);
       await updateDoc(docRef, {
         ...formData,
-        firstNameLower: formData.firstName.trim().toLowerCase(),
-        lastNameLower: formData.lastName.trim().toLowerCase(),
+        firstNameLower: firstLower,
+        lastNameLower: lastLower,
         updatedAt: new Date()
       });
       router.back();
