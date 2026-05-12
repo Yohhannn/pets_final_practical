@@ -64,11 +64,11 @@ export default function AddContactScreen() {
 
     setSaving(true);
     try {
-      // Rule 1: Same first name + last name
+      // Rule 1: Same first name + last name (case-insensitive)
       const nameQuery = query(
         collection(db, 'contacts'),
-        where('firstName', '==', formData.firstName.trim()),
-        where('lastName', '==', formData.lastName.trim())
+        where('firstNameLower', '==', formData.firstName.trim().toLowerCase()),
+        where('lastNameLower', '==', formData.lastName.trim().toLowerCase())
       );
       const sameNameDocs = await getDocs(nameQuery);
       if (!sameNameDocs.empty) {
@@ -99,6 +99,8 @@ export default function AddContactScreen() {
 
       await addDoc(collection(db, 'contacts'), {
         ...formData,
+        firstNameLower: formData.firstName.trim().toLowerCase(),
+        lastNameLower: formData.lastName.trim().toLowerCase(),
         createdAt: new Date()
       });
       router.back();

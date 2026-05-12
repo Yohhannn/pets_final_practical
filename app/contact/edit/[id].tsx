@@ -104,6 +104,8 @@ export default function EditContactScreen() {
       const docRef = doc(db, 'contacts', id as string);
       await updateDoc(docRef, {
         ...formData,
+        firstNameLower: formData.firstName.trim().toLowerCase(),
+        lastNameLower: formData.lastName.trim().toLowerCase(),
         updatedAt: new Date()
       });
       router.back();
