@@ -18,8 +18,7 @@ export default function ContactDetailScreen() {
       if (docSnap.exists()) {
         setContact({ id: docSnap.id, ...docSnap.data() });
       } else {
-        Alert.alert('Error', 'Contact not found');
-        router.back();
+        setContact(null);
       }
       setLoading(false);
     }, (error) => {
