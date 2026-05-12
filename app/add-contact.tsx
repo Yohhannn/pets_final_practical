@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, Image } from 'react-native';
+import { View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, Image, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
@@ -141,7 +141,10 @@ export default function AddContactScreen() {
               {Platform.OS === 'web' ? (
                 <InputField label="Birthday (YYYY-MM-DD)" value={formData.birthday} onChangeText={(t: string) => setFormData({...formData, birthday: t})} />
               ) : (
-                <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.inputWrapper}>
+                <TouchableOpacity onPress={() => {
+                  Keyboard.dismiss();
+                  setShowDatePicker(true);
+                }} style={styles.inputWrapper}>
                   <Text style={styles.floatingLabel}>Birthday</Text>
                   <View style={[styles.input, { justifyContent: 'center' }]}>
                     <Text style={{ fontSize: 16, color: formData.birthday ? '#333' : '#999' }}>
