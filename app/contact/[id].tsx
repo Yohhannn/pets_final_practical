@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { doc, deleteDoc, onSnapshot } from 'firebase/firestore';
@@ -10,6 +10,7 @@ export default function ContactDetailScreen() {
   const { id } = useLocalSearchParams();
   const [contact, setContact] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const isDeleting = useRef(false);
 
   useEffect(() => {
     if (!id) return;
@@ -17,8 +18,9 @@ export default function ContactDetailScreen() {
     const unsubscribe = onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists()) {
         setContact({ id: docSnap.id, ...docSnap.data() });
-      } else {
-        setContact(null);
+      } else if (!isDeleting.current) {
+        // Document gone without user pressing delete — just navigate back
+        router.replace('/');
       }
       setLoading(false);
     }, (error) => {
@@ -49,10 +51,12 @@ export default function ContactDetailScreen() {
         text: 'Delete', 
         style: 'destructive',
         onPress: async () => {
+          isDeleting.current = true;
           try {
             await deleteDoc(doc(db, 'contacts', id as string));
-            router.back();
+            router.replace('/');
           } catch (error) {
+            isDeleting.current = false;
             console.error('Error deleting contact:', error);
             Alert.alert('Error', 'Failed to delete contact');
           }
@@ -152,7 +156,12 @@ export default function ContactDetailScreen() {
           )}
           <DetailCard label="State" value={contact.state} />
           <DetailCard label="City" value={contact.city} />
-          <DetailCard label="Address" value={contact.street} />
+          <DetailCard label="Address" value={[
+            contact.street,
+            contact.city,
+            contact.state,
+            contact.zipcode
+          ].filter(Boolean).join(', ')} />
         </View>
 
         <View style={{ height: 40 }} />

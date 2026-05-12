@@ -38,6 +38,7 @@ export default function EditContactScreen() {
     state: '',
     city: '',
     street: '',
+    zipcode: '',
     image: ''
   });
   const [loading, setLoading] = useState(true);
@@ -75,6 +76,7 @@ export default function EditContactScreen() {
             state: data.state || '',
             city: data.city || '',
             street: data.street || '',
+            zipcode: data.zipcode || '',
             image: data.image || ''
           });
         } else {
@@ -217,6 +219,13 @@ export default function EditContactScreen() {
             <Ionicons name="location" size={24} color="#8A2BE2" style={styles.sectionIcon} />
             <View style={styles.fieldsCol}>
               <InputField label="Street" value={formData.street} onChangeText={(t: string) => setFormData({...formData, street: t})} />
+            </View>
+          </View>
+
+          <View style={styles.sectionRow}>
+            <Ionicons name="mail-open" size={24} color="#8A2BE2" style={styles.sectionIcon} />
+            <View style={styles.fieldsCol}>
+              <InputField label="Zip Code" value={formData.zipcode} keyboardType="number-pad" onChangeText={(t: string) => setFormData({...formData, zipcode: t})} />
             </View>
           </View>
 

@@ -37,6 +37,7 @@ export default function AddContactScreen() {
     state: '',
     city: '',
     street: '',
+    zipcode: '',
     image: ''
   });
   const [saving, setSaving] = useState(false);
@@ -177,10 +178,17 @@ export default function AddContactScreen() {
             </View>
           </View>
 
+          <View style={styles.sectionRow}>
+            <Ionicons name="mail-open" size={24} color="#8A2BE2" style={styles.sectionIcon} />
+            <View style={styles.fieldsCol}>
+              <InputField label="Zip Code" value={(formData as any).zipcode} keyboardType="number-pad" onChangeText={(t: string) => setFormData({...formData as any, zipcode: t})} />
+            </View>
+          </View>
+
           <TouchableOpacity 
             style={styles.clearAllButton} 
             onPress={() => {
-              setFormData({ firstName: '', lastName: '', phone: '', email: '', company: '', birthday: '', state: '', city: '', street: '', image: '' });
+              setFormData({ firstName: '', lastName: '', phone: '', email: '', company: '', birthday: '', state: '', city: '', street: '', zipcode: '', image: '' } as any);
               setShowDatePicker(false);
             }}
           >
