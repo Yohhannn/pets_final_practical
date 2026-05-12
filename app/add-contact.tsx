@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, Image, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -64,6 +64,39 @@ export default function AddContactScreen() {
 
     setSaving(true);
     try {
+      // Rule 1: Same first name + last name
+      const nameQuery = query(
+        collection(db, 'contacts'),
+        where('firstName', '==', formData.firstName.trim()),
+        where('lastName', '==', formData.lastName.trim())
+      );
+      const sameNameDocs = await getDocs(nameQuery);
+      if (!sameNameDocs.empty) {
+        Alert.alert(
+          'Duplicate Contact',
+          `A contact named "${formData.firstName} ${formData.lastName}" already exists.`
+        );
+        setSaving(false);
+        return;
+      }
+
+      // Rule 2: Same phone number
+      if (formData.phone.trim()) {
+        const phoneQuery = query(
+          collection(db, 'contacts'),
+          where('phone', '==', formData.phone.trim())
+        );
+        const samePhoneDocs = await getDocs(phoneQuery);
+        if (!samePhoneDocs.empty) {
+          Alert.alert(
+            'Duplicate Phone Number',
+            `The phone number "${formData.phone}" is already used by another contact.`
+          );
+          setSaving(false);
+          return;
+        }
+      }
+
       await addDoc(collection(db, 'contacts'), {
         ...formData,
         createdAt: new Date()

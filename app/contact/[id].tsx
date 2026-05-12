@@ -156,12 +156,8 @@ export default function ContactDetailScreen() {
           )}
           <DetailCard label="State" value={contact.state} />
           <DetailCard label="City" value={contact.city} />
-          <DetailCard label="Address" value={[
-            contact.street,
-            contact.city,
-            contact.state,
-            contact.zipcode
-          ].filter(Boolean).join(', ')} />
+          <DetailCard label="Street" value={contact.street} />
+          <DetailCard label="Zip Code" value={contact.zipcode} />
         </View>
 
         <View style={{ height: 40 }} />
